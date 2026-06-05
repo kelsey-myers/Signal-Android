@@ -65,6 +65,18 @@ public class EmojiTextView extends AppCompatTextView {
   private static final char  ELLIPSIS        = '…';
   private static final float JUMBOMOJI_SCALE = 0.8f;
 
+  // Strip all emoji Unicode codepoints before rendering
+  private static final java.util.regex.Pattern EMOJI_PATTERN = java.util.regex.Pattern.compile(
+      "[\\x{1F300}-\\x{1F9FF}" +
+      "\\x{2600}-\\x{27BF}" +
+      "\\x{2300}-\\x{23FF}" +
+      "\\x{FE00}-\\x{FEFF}" +
+      "\\x{200D}" +
+      "\\x{20D0}-\\x{20FF}" +
+      "\\x{FE0F}]",
+      java.util.regex.Pattern.UNICODE_CHARACTER_CLASS
+  );
+
   /**
    * Due to how ConstraintLayout works, we can end up with looping onSizeChanged
    * as we try to figure out how long this thing should be. So, this adds a bit
@@ -299,6 +311,17 @@ public class EmojiTextView extends AppCompatTextView {
   private @Nullable CharSequence getTextToSet(@Nullable CharSequence text, BufferType type) {
     if (text == null) {
       return "";
+    }
+
+    // Strip emoji before any processing so they never render
+    String stripped = EMOJI_PATTERN.matcher(text).replaceAll("").trim();
+    if (stripped.isEmpty()) stripped = "[emoji]";
+    if (text instanceof Spanned) {
+      SpannableStringBuilder builder = new SpannableStringBuilder(stripped);
+      android.text.TextUtils.copySpansFrom((Spanned) text, 0, Math.min(text.length(), stripped.length()), Object.class, builder, 0);
+      text = builder;
+    } else {
+      text = stripped;
     }
 
     EmojiParser.CandidateList candidates = isInEditMode() ? null : EmojiProvider.getCandidates(text);

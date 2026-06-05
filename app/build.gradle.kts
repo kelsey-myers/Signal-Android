@@ -215,6 +215,8 @@ android {
   }
 
   defaultConfig {
+    applicationId = "org.thoughtcrime.securesms.noemoji"
+
     if (currentHotfixVersion >= maxHotfixVersions) {
       throw AssertionError("Hotfix version offset is too large!")
     }
